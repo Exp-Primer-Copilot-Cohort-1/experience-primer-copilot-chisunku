@@ -1,71 +1,26 @@
 //create we server
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
+//create a server
+const http = require('http');
+const server = http.createServer(app);
+//create a socket
+const { Server } = require('socket.io');
+const io = new Server(server);
+//create a path
 const path = require('path');
-const fs = require('fs');
-const port = 3000;
-const commentsPath = path.join(__dirname, 'comments.json');
-app.use(bodyParser.json());
-
-//get all comments
-app.get('/comments', (req, res) => {
-    fs.readFile(commentsPath, 'utf8', (err, data) => {
-        if (err) {
-            res.status(500).send('An error occurred while reading the comments file');
-        } else {
-            res.status(200).send(JSON.parse(data));
-        }
+const PORT = process.env.PORT || 3000;
+//create a static file
+app.use(express.static(path.join(__dirname, 'public')));
+//create a connection
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    //create a comment
+    socket.on('comment', (comment) => {
+        io.emit('comment', comment);
     });
 });
-
-//create a new comment
-app.post('/comments', (req, res) => {
-    fs.readFile(commentsPath, 'utf8', (err, data) => {
-        if (err) {
-            res.status(500).send('An error occurred while reading the comments file');
-        } else {
-            const comments = JSON.parse(data);
-            const newComment = req.body;
-            newComment.id = comments.length + 1;
-            comments.push(newComment);
-            fs.writeFile(commentsPath, JSON.stringify(comments), (err) => {
-                if (err) {
-                    res.status(500).send('An error occurred while writing to the comments file');
-                } else {
-                    res.status(201).send(newComment);
-                }
-            });
-        }
-    });
+//create a server
+server.listen(PORT, () => {
+    console.log(`listening on *:${PORT}`);
 });
-
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
-
-//create a new comment
-app.post('/comments', (req, res) => {
-    fs.readFile(commentsPath, 'utf8', (err, data) => {
-        if (err) {
-            res.status(500).send('An error occurred while reading the comments file');
-        } else {
-            const comments = JSON.parse(data);
-            const newComment = req.body;
-            newComment.id = comments.length + 1;
-            comments.push(newComment);
-            fs.writeFile(commentsPath, JSON.stringify(comments), (err) => {
-                if (err) {
-                    res.status(500).send('An error occurred while writing to the comments file');
-                } else {
-                    res.status(201).send(newComment);
-                }
-            });
-        }
-    });
-});
-
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
-// Path: experience
